@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Produtos - Controle de Estoque</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f2f2f2;
+        }
+
+        header {
+            background-color: #222;
+            color: white;
+            padding: 20px;
+        }
+
+        main {
+            padding: 30px;
+        }
+
+        .botao {
+            display: inline-block;
+            background-color: #222;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            background-color: white;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #ddd;
+        }
+
+        .editar {
+            color: blue;
+        }
+
+        .excluir {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Produtos</h1>
+</header>
+
+<main>
+
+    <a href="{% url 'cadastrar_produto' %}" class="botao">
+        + Cadastrar Produto
+    </a>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Quantidade mínima</th>
+                <th>Fornecedor</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for produto in produtos %}
+
+            <tr>
+                <td>{{ produto.nome }}</td>
+                <td>{{ produto.descricao }}</td>
+                <td>{{ produto.quantidade_minima }}</td>
+                <td>{{ produto.fornecedor }}</td>
+
+                <td>
+                    <a
+                        href="{% url 'editar_produto' produto.id %}"
+                        class="editar"
+                    >
+                        Editar
+                    </a>
+
+                    |
+
+                    <a
+                        href="{% url 'excluir_produto' produto.id %}"
+                        class="excluir"
+                    >
+                        Excluir
+                    </a>
+                </td>
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="5">
+                    Nenhum produto cadastrado.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>Estoque</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f2f2f2;
+        }
+
+        header {
+            background-color: #222;
+            color: white;
+            padding: 20px;
+        }
+
+        main {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            background-color: white;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #ddd;
+        }
+
+        .saldo {
+            font-weight: bold;
+        }
+
+        .baixo {
+            color: red;
+            font-weight: bold;
+        }
+
+        .normal {
+            color: green;
+            font-weight: bold;
+        }
+
+        .voltar {
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Estoque por Depósito</h1>
+</header>
+
+<main>
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Produto</th>
+                <th>Depósito</th>
+                <th>Entradas</th>
+                <th>Saídas</th>
+                <th>Saldo</th>
+                <th>Status</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for item in estoque %}
+
+            <tr>
+
+                <td>
+                    {{ item.produto.nome }}
+                </td>
+
+                <td>
+                    {{ item.deposito.nome }}
+                </td>
+
+                <td>
+                    {{ item.entradas }}
+                </td>
+
+                <td>
+                    {{ item.saidas }}
+                </td>
+
+                <td class="saldo">
+                    {{ item.saldo }}
+                </td>
+
+                <td>
+
+                    {% if item.saldo <= item.produto.quantidade_minima %}
+
+                        <span class="baixo">
+                            ESTOQUE BAIXO
+                        </span>
+
+                    {% else %}
+
+                        <span class="normal">
+                            NORMAL
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+
+                <td colspan="6">
+                    Nenhum produto e depósito cadastrados.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    <a
+        href="{% url 'inicio' %}"
+        class="voltar"
+    >
+        ← Voltar para o início
+    </a>
+
+</main>
+
+</body>
+
+</html>

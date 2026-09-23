@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Controle de Estoque</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f2f2f2;
+        }
+
+        header {
+            background-color: #222;
+            color: white;
+            padding: 20px;
+        }
+
+        main {
+            padding: 30px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: white;
+            padding: 20px;
+            width: 200px;
+            border-radius: 8px;
+        }
+
+        .numero {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .menu {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .botao {
+            background-color: #222;
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>
+        Controle de Estoque
+    </h1>
+
+</header>
+
+<main>
+
+    <h2>
+        Dashboard
+    </h2>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>
+                Produtos
+            </h3>
+
+            <div class="numero">
+                {{ total_produtos }}
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Fornecedores
+            </h3>
+
+            <div class="numero">
+                {{ total_fornecedores }}
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Depósitos
+            </h3>
+
+            <div class="numero">
+                {{ total_depositos }}
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Movimentações
+            </h3>
+
+            <div class="numero">
+                {{ total_movimentacoes }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <h2>
+        Menu
+    </h2>
+
+    <div class="menu">
+
+        <a
+            href="{% url 'produtos' %}"
+            class="botao"
+        >
+            Produtos
+        </a>
+
+        <a
+            href="{% url 'fornecedores' %}"
+            class="botao"
+        >
+            Fornecedores
+        </a>
+
+        <a
+            href="{% url 'depositos' %}"
+            class="botao"
+        >
+            Depósitos
+        </a>
+
+        <a
+            href="{% url 'movimentacoes' %}"
+            class="botao"
+        >
+            Movimentações
+        </a>
+
+        <a
+            href="{% url 'estoque' %}"
+            class="botao"
+        >
+            Consultar Estoque
+        </a>
+
+    </div>
+
+</main>
+
+</body>
+
+</html>
