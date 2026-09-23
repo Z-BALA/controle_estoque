@@ -304,46 +304,8 @@ def cadastrar_movimentacao(request):
         form = MovimentacaoForm(request.POST)
 
         if form.is_valid():
-            movimentacao = form.save()
-
-            # Verifica se é uma saída
-            if movimentacao.tipo == Movimentacao.SAIDA:
-
-                produto = movimentacao.produto
-                deposito = movimentacao.deposito
-
-                entradas = Movimentacao.objects.filter(
-                    produto=produto,
-                    deposito=deposito,
-                    tipo=Movimentacao.ENTRADA
-                ).aggregate(
-                    total=Sum('quantidade')
-                )['total'] or 0
-
-                saidas = Movimentacao.objects.filter(
-                    produto=produto,
-                    deposito=deposito,
-                    tipo=Movimentacao.SAIDA
-                ).aggregate(
-                    total=Sum('quantidade')
-                )['total'] or 0
-
-                saldo = entradas - saidas
-
-                if saldo < 0:
-                    movimentacao.delete()
-
-                    form.add_error(
-                        'quantidade',
-                        'Não há estoque suficiente neste depósito.'
-                    )
-
-                else:
-                    return redirect('movimentacoes')
-
-            else:
-                return redirect('movimentacoes')
-
+            form.save()
+            return redirect('movimentacoes')
     else:
         form = MovimentacaoForm()
 

@@ -47,11 +47,6 @@
             cursor: pointer;
             border-radius: 5px;
         }
-
-        .erro {
-            color: red;
-            margin-bottom: 15px;
-        }
     </style>
 </head>
 
@@ -66,14 +61,6 @@
     <form method="POST">
 
         {% csrf_token %}
-
-        {% if form.non_field_errors %}
-
-            <div class="erro">
-                {{ form.non_field_errors }}
-            </div>
-
-        {% endif %}
 
         {{ form.as_p }}
 

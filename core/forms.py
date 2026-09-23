@@ -85,3 +85,42 @@ class MovimentacaoForm(forms.ModelForm):
             )
 
         return quantidade
+
+    def clean(self):
+        dados = super().clean()
+
+        produto = dados.get('produto')
+        deposito = dados.get('deposito')
+        tipo = dados.get('tipo')
+        quantidade = dados.get('quantidade')
+
+        if not produto or not deposito or not tipo or not quantidade:
+            return dados
+
+        if tipo == Movimentacao.SAIDA:
+
+            entradas = Movimentacao.objects.filter(
+                produto=produto,
+                deposito=deposito,
+                tipo=Movimentacao.ENTRADA
+            ).aggregate(
+                total=Sum('quantidade')
+            )['total'] or 0
+
+            saidas = Movimentacao.objects.filter(
+                produto=produto,
+                deposito=deposito,
+                tipo=Movimentacao.SAIDA
+            ).aggregate(
+                total=Sum('quantidade')
+            )['total'] or 0
+
+            estoque_atual = entradas - saidas
+
+            if quantidade > estoque_atual:
+                raise forms.ValidationError(
+                    f'Não há estoque suficiente neste depósito. '
+                    f'Estoque atual: {estoque_atual}.'
+                )
+
+        return dados
