@@ -45,10 +45,38 @@ def inicio(request):
 def produtos(request):
     lista_produtos = Produto.objects.all()
 
+    nome = request.GET.get('nome')
+    categoria = request.GET.get('categoria')
+    fornecedor = request.GET.get('fornecedor')
+
+    if nome:
+        lista_produtos = lista_produtos.filter(
+            nome__icontains=nome
+        )
+
+    if categoria:
+        lista_produtos = lista_produtos.filter(
+            categoria=categoria
+        )
+
+    if fornecedor:
+        lista_produtos = lista_produtos.filter(
+            fornecedor_id=fornecedor
+        )
+
+    fornecedores = Fornecedor.objects.all().order_by('nome')
+
     return render(
         request,
         'core/produtos.html',
-        {'produtos': lista_produtos}
+        {
+            'produtos': lista_produtos,
+            'fornecedores': fornecedores,
+            'categorias': Produto.CATEGORIAS,
+            'nome_filtro': nome or '',
+            'categoria_filtro': categoria or '',
+            'fornecedor_filtro': fornecedor or ''
+        }
     )
 
 

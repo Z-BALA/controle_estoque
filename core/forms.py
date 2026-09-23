@@ -1,5 +1,12 @@
 from django import forms
-from .models import Produto, Fornecedor, Deposito, Movimentacao
+from django.db.models import Sum
+
+from .models import (
+    Produto,
+    Fornecedor,
+    Deposito,
+    Movimentacao
+)
 
 
 class ProdutoForm(forms.ModelForm):
@@ -9,6 +16,7 @@ class ProdutoForm(forms.ModelForm):
             'nome',
             'descricao',
             'quantidade_minima',
+            'categoria',
             'fornecedor'
         ]
 
@@ -16,6 +24,7 @@ class ProdutoForm(forms.ModelForm):
             'nome': 'Nome',
             'descricao': 'Descrição',
             'quantidade_minima': 'Quantidade mínima',
+            'categoria': 'Categoria',
             'fornecedor': 'Fornecedor'
         }
 

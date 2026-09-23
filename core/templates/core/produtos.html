@@ -33,6 +33,44 @@
             margin-bottom: 20px;
         }
 
+        .filtros {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .filtros label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .filtros input,
+        .filtros select {
+            width: 100%;
+            max-width: 400px;
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .botao-filtro {
+            background-color: #222;
+            color: white;
+            padding: 9px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .botao-limpar {
+            display: inline-block;
+            margin-left: 10px;
+            color: #222;
+            text-decoration: none;
+        }
+
         table {
             width: 100%;
             background-color: white;
@@ -71,12 +109,89 @@
         + Cadastrar Produto
     </a>
 
+    <div class="filtros">
+
+        <h2>Buscar e filtrar produtos</h2>
+
+        <form method="get">
+
+            <label for="nome">
+                Nome do produto
+            </label>
+
+            <input
+                type="text"
+                id="nome"
+                name="nome"
+                value="{{ nome_filtro }}"
+                placeholder="Digite o nome do produto"
+            >
+
+            <label for="categoria">
+                Categoria
+            </label>
+
+            <select id="categoria" name="categoria">
+
+                <option value="">
+                    Todas as categorias
+                </option>
+
+                {% for codigo, nome_categoria in categorias %}
+
+                    <option
+                        value="{{ codigo }}"
+                        {% if categoria_filtro == codigo %}selected{% endif %}
+                    >
+                        {{ nome_categoria }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+            <label for="fornecedor">
+                Fornecedor
+            </label>
+
+            <select id="fornecedor" name="fornecedor">
+
+                <option value="">
+                    Todos os fornecedores
+                </option>
+
+                {% for fornecedor in fornecedores %}
+
+                    <option
+                        value="{{ fornecedor.id }}"
+                        {% if fornecedor_filtro == fornecedor.id|stringformat:"s" %}selected{% endif %}
+                    >
+                        {{ fornecedor.nome }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+            <button type="submit" class="botao-filtro">
+                Buscar
+            </button>
+
+            <a href="{% url 'produtos' %}" class="botao-limpar">
+                Limpar filtros
+            </a>
+
+        </form>
+
+    </div>
+
     <table>
 
         <thead>
             <tr>
                 <th>Nome</th>
                 <th>Descrição</th>
+                <th>Categoria</th>
                 <th>Quantidade mínima</th>
                 <th>Fornecedor</th>
                 <th>Ações</th>
@@ -89,8 +204,13 @@
 
             <tr>
                 <td>{{ produto.nome }}</td>
+
                 <td>{{ produto.descricao }}</td>
+
+                <td>{{ produto.get_categoria_display }}</td>
+
                 <td>{{ produto.quantidade_minima }}</td>
+
                 <td>{{ produto.fornecedor }}</td>
 
                 <td>
@@ -115,8 +235,8 @@
             {% empty %}
 
             <tr>
-                <td colspan="5">
-                    Nenhum produto cadastrado.
+                <td colspan="6">
+                    Nenhum produto encontrado.
                 </td>
             </tr>
 

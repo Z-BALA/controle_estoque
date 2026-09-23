@@ -11,9 +11,27 @@ class Fornecedor(models.Model):
 
 
 class Produto(models.Model):
+
+    CATEGORIAS = [
+        ('INF', 'Informática'),
+        ('ELE', 'Eletrônicos'),
+        ('ESC', 'Material de Escritório'),
+        ('LIM', 'Material de Limpeza'),
+        ('FER', 'Ferramentas'),
+        ('EPI', 'Equipamentos de Proteção'),
+        ('MOV', 'Móveis'),
+        ('OUT', 'Outros'),
+    ]
+
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
     quantidade_minima = models.IntegerField(default=0)
+
+    categoria = models.CharField(
+        max_length=3,
+        choices=CATEGORIAS
+    )
+
     fornecedor = models.ForeignKey(
         Fornecedor,
         on_delete=models.CASCADE
@@ -44,14 +62,17 @@ class Movimentacao(models.Model):
         Produto,
         on_delete=models.CASCADE
     )
+
     deposito = models.ForeignKey(
         Deposito,
         on_delete=models.CASCADE
     )
+
     tipo = models.CharField(
         max_length=10,
         choices=TIPOS
     )
+
     quantidade = models.IntegerField()
     data = models.DateTimeField(auto_now_add=True)
 
