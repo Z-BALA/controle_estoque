@@ -1,12 +1,33 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.coverage
 
+# Ambientes, ferramentas e configuração local
 venv/
 .venv/
 env/
-.env
-
+.python/
+.p2-publicacao*/
 .vscode/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials*.json
+secrets*.json
 
-db.sqlite3
+# Bancos, backups e arquivos temporários
+*.sqlite3
+*.sqlite3-*
+*.sqlite3.*
+*.db
+*.bak
+backup-*.zip
+*.tmp
+*.log

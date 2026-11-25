@@ -67,10 +67,11 @@
 </header>
 
 <main>
+<p><a href="{% url 'inicio' %}">Voltar ao início</a></p>
 
-    <a href="{% url 'cadastrar_fornecedor' %}" class="botao">
+    {% if request.user.perfil.eh_admin %}<a href="{% url 'cadastrar_fornecedor' %}" class="botao">
         + Cadastrar Fornecedor
-    </a>
+    </a>{% endif %}
 
     <table>
 
@@ -93,7 +94,7 @@
                 <td>{{ fornecedor.email }}</td>
 
                 <td>
-                    <a
+                    {% if request.user.perfil.eh_admin %}<a
                         href="{% url 'editar_fornecedor' fornecedor.id %}"
                         class="editar"
                     >
@@ -107,7 +108,7 @@
                         class="excluir"
                     >
                         Excluir
-                    </a>
+                    </a>{% endif %}
                 </td>
             </tr>
 

@@ -71,13 +71,14 @@
 </header>
 
 <main>
+<p><a href="{% url 'inicio' %}">Voltar ao início</a></p>
 
-    <a
+    {% if request.user.perfil.eh_admin %}<a
         href="{% url 'cadastrar_deposito' %}"
         class="botao"
     >
         + Cadastrar Depósito
-    </a>
+    </a>{% endif %}
 
     <table>
 
@@ -105,7 +106,7 @@
 
                 <td>
 
-                    <a
+                    {% if request.user.perfil.eh_admin %}<a
                         href="{% url 'editar_deposito' deposito.id %}"
                         class="editar"
                     >
@@ -119,7 +120,7 @@
                         class="excluir"
                     >
                         Excluir
-                    </a>
+                    </a>{% endif %}
 
                 </td>
 

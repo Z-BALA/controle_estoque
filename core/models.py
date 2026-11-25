@@ -1,7 +1,37 @@
 from django.db import models
+from django.conf import settings
 
 
-class Fornecedor(models.Model):
+class Organizacao(models.Model):
+    nome = models.CharField(max_length=120)
+    criada_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nome
+
+
+class Perfil(models.Model):
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organizacao = models.ForeignKey(Organizacao, on_delete=models.PROTECT)
+    papel = models.CharField(max_length=10, choices=[("admin", "Administrador"), ("operador", "Operador")], default="operador")
+
+    @property
+    def eh_admin(self):
+        return self.papel == "admin"
+
+    def __str__(self):
+        return str(self.usuario)
+
+
+class DaOrganizacao(models.Model):
+    organizacao = models.ForeignKey(Organizacao, on_delete=models.PROTECT)
+
+    class Meta:
+        abstract = True
+
+
+
+class Fornecedor(DaOrganizacao):
     nome = models.CharField(max_length=100)
     telefone = models.CharField(max_length=20)
     email = models.EmailField(blank=True)
@@ -10,7 +40,7 @@ class Fornecedor(models.Model):
         return self.nome
 
 
-class Produto(models.Model):
+class Produto(DaOrganizacao):
 
     CATEGORIAS = [
         ('INF', 'Informática'),
@@ -26,12 +56,7 @@ class Produto(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
     quantidade_minima = models.IntegerField(default=0)
-
-    categoria = models.CharField(
-        max_length=3,
-        choices=CATEGORIAS
-    )
-
+    categoria = models.CharField(max_length=3, choices=CATEGORIAS, default="OUT")
     fornecedor = models.ForeignKey(
         Fornecedor,
         on_delete=models.CASCADE
@@ -41,7 +66,7 @@ class Produto(models.Model):
         return self.nome
 
 
-class Deposito(models.Model):
+class Deposito(DaOrganizacao):
     nome = models.CharField(max_length=100)
     endereco = models.CharField(max_length=200)
 
@@ -49,7 +74,7 @@ class Deposito(models.Model):
         return self.nome
 
 
-class Movimentacao(models.Model):
+class Movimentacao(DaOrganizacao):
     ENTRADA = 'entrada'
     SAIDA = 'saida'
 
@@ -62,17 +87,14 @@ class Movimentacao(models.Model):
         Produto,
         on_delete=models.CASCADE
     )
-
     deposito = models.ForeignKey(
         Deposito,
         on_delete=models.CASCADE
     )
-
     tipo = models.CharField(
         max_length=10,
         choices=TIPOS
     )
-
     quantidade = models.IntegerField()
     data = models.DateTimeField(auto_now_add=True)
 

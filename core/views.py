@@ -1,3 +1,6 @@
+from .decorators import acesso, org_atual
+from .services import registrar_movimentacao, linhas_estoque
+from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum
 
@@ -20,11 +23,13 @@ from .forms import (
 # INÍCIO
 # =========================
 
+@acesso()
 def inicio(request):
-    total_produtos = Produto.objects.count()
-    total_fornecedores = Fornecedor.objects.count()
-    total_depositos = Deposito.objects.count()
-    total_movimentacoes = Movimentacao.objects.count()
+    org = org_atual(request)
+    total_produtos = Produto.objects.filter(organizacao=org).count()
+    total_fornecedores = Fornecedor.objects.filter(organizacao=org).count()
+    total_depositos = Deposito.objects.filter(organizacao=org).count()
+    total_movimentacoes = Movimentacao.objects.filter(organizacao=org).count()
 
     return render(
         request,
@@ -42,53 +47,49 @@ def inicio(request):
 # PRODUTOS
 # =========================
 
+@acesso()
 def produtos(request):
-    lista_produtos = Produto.objects.all()
+    org = org_atual(request)
+    lista_produtos = Produto.objects.filter(organizacao=org).select_related("fornecedor")
 
-    nome = request.GET.get('nome')
-    categoria = request.GET.get('categoria')
-    fornecedor = request.GET.get('fornecedor')
+    nome = request.GET.get('nome', '')
+    categoria = request.GET.get('categoria', '')
+    fornecedor = request.GET.get('fornecedor', '')
+    fornecedores = Fornecedor.objects.filter(organizacao=org).order_by('nome')
 
     if nome:
-        lista_produtos = lista_produtos.filter(
-            nome__icontains=nome
-        )
-
+        lista_produtos = lista_produtos.filter(nome__icontains=nome)
     if categoria:
-        lista_produtos = lista_produtos.filter(
-            categoria=categoria
-        )
-
+        lista_produtos = lista_produtos.filter(categoria=categoria)
     if fornecedor:
-        lista_produtos = lista_produtos.filter(
-            fornecedor_id=fornecedor
-        )
+        try:
+            fornecedor_id = int(fornecedor)
+        except ValueError:
+            lista_produtos = lista_produtos.none()
+        else:
+            lista_produtos = lista_produtos.filter(fornecedor_id=fornecedor_id)
 
-    fornecedores = Fornecedor.objects.all().order_by('nome')
-
-    return render(
-        request,
-        'core/produtos.html',
-        {
-            'produtos': lista_produtos,
-            'fornecedores': fornecedores,
-            'categorias': Produto.CATEGORIAS,
-            'nome_filtro': nome or '',
-            'categoria_filtro': categoria or '',
-            'fornecedor_filtro': fornecedor or ''
-        }
-    )
+    return render(request, 'core/produtos.html', {
+        'produtos': lista_produtos,
+        'fornecedores': fornecedores,
+        'categorias': Produto.CATEGORIAS,
+        'nome_filtro': nome,
+        'categoria_filtro': categoria,
+        'fornecedor_filtro': fornecedor,
+    })
 
 
+@acesso(admin=True)
 def cadastrar_produto(request):
+    org = org_atual(request)
     if request.method == 'POST':
-        form = ProdutoForm(request.POST)
+        form = ProdutoForm(request.POST, org=org)
 
         if form.is_valid():
             form.save()
             return redirect('produtos')
     else:
-        form = ProdutoForm()
+        form = ProdutoForm(org=org)
 
     return render(
         request,
@@ -97,12 +98,15 @@ def cadastrar_produto(request):
     )
 
 
+@acesso(admin=True)
 def editar_produto(request, id):
-    produto = get_object_or_404(Produto, id=id)
+    org = org_atual(request)
+    produto = get_object_or_404(Produto, id=id, organizacao=org)
 
     if request.method == 'POST':
         form = ProdutoForm(
             request.POST,
+            org=org,
             instance=produto
         )
 
@@ -110,7 +114,7 @@ def editar_produto(request, id):
             form.save()
             return redirect('produtos')
     else:
-        form = ProdutoForm(instance=produto)
+        form = ProdutoForm(org=org, instance=produto)
 
     return render(
         request,
@@ -119,8 +123,10 @@ def editar_produto(request, id):
     )
 
 
+@acesso(admin=True)
 def excluir_produto(request, id):
-    produto = get_object_or_404(Produto, id=id)
+    org = org_atual(request)
+    produto = get_object_or_404(Produto, id=id, organizacao=org)
 
     if request.method == 'POST':
         produto.delete()
@@ -137,8 +143,10 @@ def excluir_produto(request, id):
 # FORNECEDORES
 # =========================
 
+@acesso()
 def fornecedores(request):
-    lista_fornecedores = Fornecedor.objects.all()
+    org = org_atual(request)
+    lista_fornecedores = Fornecedor.objects.filter(organizacao=org)
 
     return render(
         request,
@@ -147,15 +155,17 @@ def fornecedores(request):
     )
 
 
+@acesso(admin=True)
 def cadastrar_fornecedor(request):
+    org = org_atual(request)
     if request.method == 'POST':
-        form = FornecedorForm(request.POST)
+        form = FornecedorForm(request.POST, org=org)
 
         if form.is_valid():
             form.save()
             return redirect('fornecedores')
     else:
-        form = FornecedorForm()
+        form = FornecedorForm(org=org)
 
     return render(
         request,
@@ -164,15 +174,18 @@ def cadastrar_fornecedor(request):
     )
 
 
+@acesso(admin=True)
 def editar_fornecedor(request, id):
+    org = org_atual(request)
     fornecedor = get_object_or_404(
         Fornecedor,
-        id=id
+        id=id, organizacao=org
     )
 
     if request.method == 'POST':
         form = FornecedorForm(
             request.POST,
+            org=org,
             instance=fornecedor
         )
 
@@ -181,6 +194,7 @@ def editar_fornecedor(request, id):
             return redirect('fornecedores')
     else:
         form = FornecedorForm(
+            org=org,
             instance=fornecedor
         )
 
@@ -191,10 +205,12 @@ def editar_fornecedor(request, id):
     )
 
 
+@acesso(admin=True)
 def excluir_fornecedor(request, id):
+    org = org_atual(request)
     fornecedor = get_object_or_404(
         Fornecedor,
-        id=id
+        id=id, organizacao=org
     )
 
     if request.method == 'POST':
@@ -212,8 +228,10 @@ def excluir_fornecedor(request, id):
 # DEPÓSITOS
 # =========================
 
+@acesso()
 def depositos(request):
-    lista_depositos = Deposito.objects.all()
+    org = org_atual(request)
+    lista_depositos = Deposito.objects.filter(organizacao=org)
 
     return render(
         request,
@@ -222,15 +240,17 @@ def depositos(request):
     )
 
 
+@acesso(admin=True)
 def cadastrar_deposito(request):
+    org = org_atual(request)
     if request.method == 'POST':
-        form = DepositoForm(request.POST)
+        form = DepositoForm(request.POST, org=org)
 
         if form.is_valid():
             form.save()
             return redirect('depositos')
     else:
-        form = DepositoForm()
+        form = DepositoForm(org=org)
 
     return render(
         request,
@@ -239,15 +259,18 @@ def cadastrar_deposito(request):
     )
 
 
+@acesso(admin=True)
 def editar_deposito(request, id):
+    org = org_atual(request)
     deposito = get_object_or_404(
         Deposito,
-        id=id
+        id=id, organizacao=org
     )
 
     if request.method == 'POST':
         form = DepositoForm(
             request.POST,
+            org=org,
             instance=deposito
         )
 
@@ -256,6 +279,7 @@ def editar_deposito(request, id):
             return redirect('depositos')
     else:
         form = DepositoForm(
+            org=org,
             instance=deposito
         )
 
@@ -266,10 +290,12 @@ def editar_deposito(request, id):
     )
 
 
+@acesso(admin=True)
 def excluir_deposito(request, id):
+    org = org_atual(request)
     deposito = get_object_or_404(
         Deposito,
-        id=id
+        id=id, organizacao=org
     )
 
     if request.method == 'POST':
@@ -287,8 +313,10 @@ def excluir_deposito(request, id):
 # MOVIMENTAÇÕES
 # =========================
 
+@acesso()
 def movimentacoes(request):
-    lista_movimentacoes = Movimentacao.objects.all().order_by('-data')
+    org = org_atual(request)
+    lista_movimentacoes = Movimentacao.objects.filter(organizacao=org).select_related("produto", "deposito").order_by('-data')
 
     return render(
         request,
@@ -299,66 +327,48 @@ def movimentacoes(request):
     )
 
 
+@acesso()
 def cadastrar_movimentacao(request):
-    if request.method == 'POST':
-        form = MovimentacaoForm(request.POST)
-
-        if form.is_valid():
-            form.save()
+    org = org_atual(request)
+    form = MovimentacaoForm(request.POST if request.method == 'POST' else None, org=org)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            registrar_movimentacao(org, **form.cleaned_data)
+        except ValidationError as exc:
+            form.add_error('quantidade', exc)
+        else:
             return redirect('movimentacoes')
-    else:
-        form = MovimentacaoForm()
+    return render(request, 'core/movimentacao_form.html', {'form':form})
 
-    return render(
-        request,
-        'core/movimentacao_form.html',
-        {'form': form}
-    )
-
-
-# =========================
-# ESTOQUE
-# =========================
-
+@acesso()
 def estoque(request):
+    org = org_atual(request)
+    return render(request, 'core/estoque.html', {'estoque':list(linhas_estoque(org))})
 
-    produtos = Produto.objects.all()
-    depositos = Deposito.objects.all()
+from .dashboard import periodo_validado, metricas
+from django.http import HttpResponse, HttpResponseBadRequest
+import csv
 
-    estoque = []
+@acesso()
+def dashboard(request):
+    form, base = periodo_validado(request.GET, org_atual(request))
+    contexto = metricas(base, request.user.perfil.eh_admin)
+    contexto.update(form=form, mostra_series=request.user.perfil.eh_admin)
+    return render(request, 'core/dashboard.html', contexto)
 
-    for produto in produtos:
-
-        for deposito in depositos:
-
-            entradas = Movimentacao.objects.filter(
-                produto=produto,
-                deposito=deposito,
-                tipo=Movimentacao.ENTRADA
-            ).aggregate(
-                total=Sum('quantidade')
-            )['total'] or 0
-
-            saidas = Movimentacao.objects.filter(
-                produto=produto,
-                deposito=deposito,
-                tipo=Movimentacao.SAIDA
-            ).aggregate(
-                total=Sum('quantidade')
-            )['total'] or 0
-
-            saldo = entradas - saidas
-
-            estoque.append({
-                'produto': produto,
-                'deposito': deposito,
-                'entradas': entradas,
-                'saidas': saidas,
-                'saldo': saldo
-            })
-
-    return render(
-        request,
-        'core/estoque.html',
-        {'estoque': estoque}
-    )
+@acesso(admin=True)
+def exportar_csv(request):
+    form, base = periodo_validado(request.GET, org_atual(request))
+    if not form.is_valid():
+        return HttpResponseBadRequest('Período inválido.')
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="movimentacoes.csv"'
+    response.write('\ufeff')
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Data','Produto','Depósito','Tipo','Quantidade'])
+    from django.utils.timezone import localtime
+    def seguro(texto):
+        return "'"+texto if texto.lstrip().startswith(('=','+','-','@','\t','\r')) else texto
+    for m in base.select_related('produto','deposito').order_by('data'):
+        writer.writerow([localtime(m.data).strftime('%d/%m/%Y %H:%M'),seguro(m.produto.nome),seguro(m.deposito.nome),m.get_tipo_display(),m.quantidade])
+    return response

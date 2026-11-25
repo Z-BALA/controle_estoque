@@ -1,35 +1,44 @@
 from django import forms
-from django.db.models import Sum
-
-from .models import (
-    Produto,
-    Fornecedor,
-    Deposito,
-    Movimentacao
-)
+from .models import Produto, Fornecedor, Deposito, Movimentacao
 
 
-class ProdutoForm(forms.ModelForm):
+class OrgForm(forms.ModelForm):
+    def __init__(self, *args, org, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.org = org
+        self.instance.organizacao = org
+        for campo, model in [('fornecedor', Fornecedor), ('produto', Produto), ('deposito', Deposito)]:
+            if campo in self.fields:
+                self.fields[campo].queryset = model.objects.filter(organizacao=org)
+
+
+class ProdutoForm(OrgForm):
+    def clean_quantidade_minima(self):
+        valor = self.cleaned_data['quantidade_minima']
+        if valor < 0:
+            raise forms.ValidationError('O mínimo não pode ser negativo.')
+        return valor
+
     class Meta:
         model = Produto
         fields = [
             'nome',
             'descricao',
-            'quantidade_minima',
             'categoria',
+            'quantidade_minima',
             'fornecedor'
         ]
 
         labels = {
             'nome': 'Nome',
             'descricao': 'Descrição',
-            'quantidade_minima': 'Quantidade mínima',
             'categoria': 'Categoria',
+            'quantidade_minima': 'Quantidade mínima',
             'fornecedor': 'Fornecedor'
         }
 
 
-class FornecedorForm(forms.ModelForm):
+class FornecedorForm(OrgForm):
     class Meta:
         model = Fornecedor
         fields = [
@@ -45,7 +54,7 @@ class FornecedorForm(forms.ModelForm):
         }
 
 
-class DepositoForm(forms.ModelForm):
+class DepositoForm(OrgForm):
     class Meta:
         model = Deposito
         fields = [
@@ -59,7 +68,7 @@ class DepositoForm(forms.ModelForm):
         }
 
 
-class MovimentacaoForm(forms.ModelForm):
+class MovimentacaoForm(OrgForm):
     class Meta:
         model = Movimentacao
         fields = [
@@ -86,41 +95,12 @@ class MovimentacaoForm(forms.ModelForm):
 
         return quantidade
 
+class PeriodoForm(forms.Form):
+    inicio = forms.DateField(required=False, widget=forms.DateInput(attrs={'type':'date'}, format='%Y-%m-%d'))
+    fim = forms.DateField(required=False, widget=forms.DateInput(attrs={'type':'date'}, format='%Y-%m-%d'))
+
     def clean(self):
         dados = super().clean()
-
-        produto = dados.get('produto')
-        deposito = dados.get('deposito')
-        tipo = dados.get('tipo')
-        quantidade = dados.get('quantidade')
-
-        if not produto or not deposito or not tipo or not quantidade:
-            return dados
-
-        if tipo == Movimentacao.SAIDA:
-
-            entradas = Movimentacao.objects.filter(
-                produto=produto,
-                deposito=deposito,
-                tipo=Movimentacao.ENTRADA
-            ).aggregate(
-                total=Sum('quantidade')
-            )['total'] or 0
-
-            saidas = Movimentacao.objects.filter(
-                produto=produto,
-                deposito=deposito,
-                tipo=Movimentacao.SAIDA
-            ).aggregate(
-                total=Sum('quantidade')
-            )['total'] or 0
-
-            estoque_atual = entradas - saidas
-
-            if quantidade > estoque_atual:
-                raise forms.ValidationError(
-                    f'Não há estoque suficiente neste depósito. '
-                    f'Estoque atual: {estoque_atual}.'
-                )
-
+        if dados.get('inicio') and dados.get('fim') and dados['inicio'] > dados['fim']:
+            raise forms.ValidationError('A data inicial deve ser anterior ou igual à final.')
         return dados
